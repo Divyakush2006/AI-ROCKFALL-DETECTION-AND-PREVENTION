@@ -2,16 +2,17 @@
 
 # AI Rockfall Detection & Prevention
 
-**A control-room dashboard for slope-stability monitoring in open-pit mines.**
+**A control-room dashboard and hazard classifier for slope-stability monitoring in open-pit mines.**
 
-Continuous geotechnical telemetry, threshold-banded risk classification, and a one-touch
-site-wide evacuation alarm — in a single operator interface.
+Continuous geotechnical telemetry, threshold-banded risk classification, a trained failure-risk
+model, and a one-touch site-wide evacuation alarm.
 
 [![React](https://img.shields.io/badge/React-18.3-61DAFB?logo=react&logoColor=white)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?logo=vite&logoColor=white)](https://vitejs.dev)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![shadcn/ui](https://img.shields.io/badge/shadcn%2Fui-Radix-000000)](https://ui.shadcn.com)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-Classifier-F7931E?logo=scikitlearn&logoColor=white)](https://scikit-learn.org)
+[![Test F1](https://img.shields.io/badge/test%20F1-0.978-success)](#hazard-model)
 [![Smart India Hackathon](https://img.shields.io/badge/Smart%20India%20Hackathon-2025-FF6B00)](https://www.sih.gov.in)
 
 </div>
@@ -25,7 +26,9 @@ site-wide evacuation alarm — in a single operator interface.
 - [Features](#features)
 - [Monitored parameters](#monitored-parameters)
 - [Risk classification](#risk-classification)
+- [Hazard model](#hazard-model)
 - [Architecture](#architecture)
+- [Repository layout](#repository-layout)
 - [Alarm subsystem](#alarm-subsystem)
 - [Tech stack](#tech-stack)
 - [Getting started](#getting-started)
@@ -45,29 +48,32 @@ typically read in isolation, on different schedules, by different people.
 
 The cost of missing the pattern is measured in lives.
 
-This project addresses the operator-facing half of that problem: **a single screen where every
-geotechnical signal, its threshold band, and the means to evacuate the site all live together.**
-It was built for **Smart India Hackathon 2025**, where the submission was shortlisted.
+This project attacks the problem from two directions: **a single screen where every geotechnical
+signal, its threshold band, and the means to evacuate the site all live together**, and **a
+trained classifier that scores failure risk from hydro-geotechnical conditions.** It was built
+for **Smart India Hackathon 2025**, where the submission was shortlisted.
 
 ---
 
 ## Project status & scope
 
 > [!IMPORTANT]
-> **This repository contains the frontend application only, and it runs on simulated
-> telemetry.** Please read this section before evaluating the code.
+> The project spans **two branches**, and the dashboard and the model are not yet wired
+> together. Please read this section before evaluating the code.
 
-| Layer | Status |
-|---|---|
-| Operator dashboard, sensor views, alerting UI, settings | ✅ **Implemented** — this repository |
-| Browser-side alarm generation (Web Audio) | ✅ **Implemented** — genuinely functional |
-| Telemetry source | ⚠️ **Simulated** — deterministic in-memory fixtures with a jitter loop |
-| Sensor ingestion (MQTT/Modbus), time-series storage, ML inference service | ❌ **Not implemented here** — see [Roadmap](#roadmap) |
+| Layer | Status | Location |
+|---|---|---|
+| Operator dashboard, sensor views, alerting UI, settings | ✅ **Implemented** | `main` |
+| Browser-side alarm generation (Web Audio) | ✅ **Implemented** — genuinely functional | `main` |
+| Hazard classifier — trained, benchmarked, serialised | ✅ **Implemented** | [`ML-Model`](../../tree/ML-Model) |
+| Dashboard telemetry source | ⚠️ **Simulated** — in-memory fixtures on a jitter loop | `main` |
+| Inference service joining model to UI | ❌ **Not implemented** | see [Roadmap](#roadmap) |
+| Sensor ingestion (MQTT/Modbus), time-series storage | ❌ **Not implemented** | see [Roadmap](#roadmap) |
 
-Sensor readings are seeded from realistic fixtures and perturbed on a 5-second interval to
-exercise the UI's live-update paths. No network calls are made. This is a **high-fidelity
-interface prototype**, and it is presented as one — the value on offer is the interaction
-design and the domain modelling, not a trained predictor.
+The dashboard's readings are seeded from realistic fixtures and perturbed on a 5-second
+interval to exercise its live-update paths; it makes no network calls. The classifier on the
+`ML-Model` branch is real and reproducible, but nothing yet serves its predictions to the UI —
+closing that seam is the top roadmap item.
 
 ---
 
@@ -144,6 +150,94 @@ numbers in six different units.
 
 ---
 
+## Hazard model
+
+Lives on the [`ML-Model`](../../tree/ML-Model) branch: a binary classifier predicting whether
+conditions indicate imminent slope failure, trained on 9,864 labelled observations.
+
+**Features** — six hydro-geotechnical measurements:
+
+| Feature | Unit | Range in data |
+|---|---|---|
+| `Rainfall_mm` | mm | 0 – 300 |
+| `Rainfall_3Day` | mm | 0 – 600 |
+| `Rainfall_7Day` | mm | 0 – 1000 |
+| `Temperature_C` | °C | 5 – 40 |
+| `Soil_Strain` | — | 0 – 0.01 |
+| `Pore_Water_Pressure_kPa` | kPa | 20 – 200 |
+
+Classes are near-balanced (50.3 % positive), so accuracy is a meaningful headline here rather
+than a misleading one.
+
+**Model selection** — six candidates were benchmarked with 5-fold cross-validated F1:
+Logistic Regression, Random Forest, Gradient Boosting, XGBoost, LightGBM and an MLP.
+**Logistic Regression won** and is the serialised artifact. The package
+(`best_rockfall_model_logistic_regression.pkl`) bundles the fitted model, its `StandardScaler`,
+the feature names, and the recorded metrics — so inference cannot silently drift from the
+preprocessing it was trained with.
+
+**Results** on the held-out test split (n = 1,973), reproduced independently from the
+committed artifact rather than quoted from the training run:
+
+| Split | Accuracy | Precision | Recall | F1 | ROC-AUC |
+|---|---:|---:|---:|---:|---:|
+| Test (held out) | **0.9782** | 0.9817 | 0.9748 | **0.9782** | **0.9758** |
+| Validation | 0.9696 | 0.9660 | 0.9738 | 0.9699 | 0.9714 |
+
+Confusion matrix on test: **TN 963 · FP 18 · FN 25 · TP 967**.
+
+In this domain a false negative — a failure the model calls safe — is the expensive error.
+25 of 992 positive cases are missed, so recall (0.9748) matters more than accuracy, and the
+decision threshold should be tuned toward recall before any field use.
+
+### Honest reading of these numbers
+
+> [!WARNING]
+> The headline score is strong, but it is **not** evidence of a hard problem well solved.
+> Anyone evaluating this project should know the following.
+
+- **One feature carries the signal.** `Rainfall_mm` correlates with the label at **0.897**;
+  every other feature sits below **0.01**. The standardised coefficients say the same —
+  Rainfall_mm at **+3.86**, all others under **0.10** in magnitude.
+- **A trivial baseline nearly matches the model.** The single rule `Rainfall_mm > 50 mm`
+  scores **0.9713 accuracy** on its own, against the model's 0.9782. The classifier buys
+  roughly **0.7 points** over one threshold on one sensor.
+- **The data appears synthetic**, with labels derived from a rainfall rule. The 3-day and
+  7-day accumulations, strain, pore pressure and temperature contribute essentially nothing,
+  which is not how real slope failure behaves — antecedent rainfall and pore pressure are
+  well-established drivers.
+- **`training_dataset.csv` is the full 9,864-row pool**, and the test and validation files are
+  exact subsets of it. The published metrics are valid because the model's own split was held
+  out — but re-running the notebook with a different seed will leak. Split from the pool
+  yourself rather than training on the pool and testing on `test_dataset.csv`.
+
+The correct conclusion is that **the pipeline is sound and the result is honest, but the
+dataset is too easy to demonstrate real predictive skill.** Validation against measured
+slope-failure telemetry is the work that would make this model meaningful, and it is the
+first item on the roadmap.
+
+### Reproducing
+
+```bash
+git checkout ML-Model
+pip install scikit-learn pandas numpy joblib xgboost lightgbm matplotlib seaborn
+python rockfall_ml_model.py
+```
+
+Loading the trained artifact directly:
+
+```python
+import joblib, pandas as pd
+
+pkg = joblib.load("best_rockfall_model_logistic_regression.pkl")
+model, scaler = pkg["model"], pkg["scaler"]
+
+X = pd.read_csv("test_dataset.csv").drop("Label", axis=1)[pkg["feature_names"]]
+risk = model.predict_proba(scaler.transform(X))[:, 1]   # P(failure)
+```
+
+---
+
 ## Architecture
 
 **What runs today** — a self-contained SPA. State lives in React; the telemetry simulator
@@ -163,7 +257,8 @@ flowchart TD
     R[React Router] --- DASH
 ```
 
-**Target deployment** — the simulator is replaced at a single seam, leaving every view intact:
+**Target deployment** — the simulator is replaced at a single seam, leaving every view intact.
+Dashed edges are the parts not yet built:
 
 ```mermaid
 flowchart LR
@@ -173,13 +268,26 @@ flowchart LR
         S3[Pore pressure] --> GW
         S4[Rain / Temp / Vibration] --> GW
     end
-    GW -->|MQTT / Modbus| ING[Ingestion service]
-    ING --> TS[(Time-series store)]
-    TS --> INF[Inference service<br/>hazard scoring]
-    INF --> API[REST + WebSocket API]
+    GW -.->|MQTT / Modbus| ING[Ingestion service]
+    ING -.-> TS[(Time-series store)]
+    TS -.-> INF["Inference service"]
+    MDL["Trained classifier<br/>ML-Model branch"] --> INF
+    INF -.-> API[REST + WebSocket API]
     API -.->|replaces simulator| UI[This dashboard]
-    INF --> NOT[Notification fan-out<br/>email · SMS · push]
+    INF -.-> NOT[Notification fan-out<br/>email · SMS · push]
 ```
+
+---
+
+## Repository layout
+
+| Branch | Contents |
+|---|---|
+| [`main`](../../tree/main) | React dashboard — the operator interface documented here |
+| [`ML-Model`](../../tree/ML-Model) | Training notebook, three dataset splits, serialised classifier |
+
+The branches are independent: the dashboard does not import the model, and the model has no
+knowledge of the dashboard. Unifying them behind an inference service is the top roadmap item.
 
 ---
 
@@ -226,6 +334,7 @@ stateDiagram-v2
 | Icons | Lucide |
 | Notifications | Sonner |
 | Audio | Web Audio API |
+| ML (`ML-Model` branch) | scikit-learn, XGBoost, LightGBM, pandas, NumPy, joblib |
 
 ---
 
@@ -300,8 +409,10 @@ glare costs legibility.
 
 Ordered by what would most increase the system's real-world value:
 
-- [ ] **Ingestion service** — MQTT/Modbus gateway writing to a time-series store, replacing the simulator behind a typed data client
-- [ ] **Hazard inference** — train on historical slope-failure telemetry; publish evaluation metrics honestly alongside the model
+- [ ] **Validate the model on real telemetry** — the current dataset is too easy to prove predictive skill; measured slope-failure data is what would make the classifier meaningful
+- [ ] **Inference service** — serve the `ML-Model` artifact behind an API and replace the dashboard's simulator with its output, joining the two branches
+- [ ] **Tune for recall** — a missed failure costs more than a false alarm; pick the operating threshold deliberately rather than defaulting to 0.5
+- [ ] **Ingestion service** — MQTT/Modbus gateway writing to a time-series store, behind a typed data client
 - [ ] **Live transport** — WebSocket push so readings and alerts stream rather than poll
 - [ ] **Persistence** — settings, thresholds, and acknowledged alerts survive reload
 - [ ] **Notification fan-out** — wire the configured email/SMS/push channels to a real provider
