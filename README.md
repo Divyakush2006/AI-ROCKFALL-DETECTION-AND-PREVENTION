@@ -427,7 +427,7 @@ Ordered by what would most increase the system's real-world value:
 **Divyakush Punjabi**
 B.Tech Computer Engineering, VIT Vellore · Major in AI, IIT Ropar
 
-[Portfolio](https://divyakush.is-a.dev) · [GitHub](https://github.com/Divyakush2006) · [LinkedIn](https://linkedin.com/in/divyakush-punjabi)
+[Portfolio](https://www.divyakush.com) · [GitHub](https://github.com/Divyakush2006) · [LinkedIn](https://linkedin.com/in/divyakush-punjabi)
 
 Built for **Smart India Hackathon 2025** — shortlisted.
 
