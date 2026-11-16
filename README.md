@@ -14,6 +14,9 @@ model, and a one-touch site-wide evacuation alarm.
 [![scikit-learn](https://img.shields.io/badge/scikit--learn-Classifier-F7931E?logo=scikitlearn&logoColor=white)](https://scikit-learn.org)
 [![Test F1](https://img.shields.io/badge/test%20F1-0.978-success)](#hazard-model)
 [![Smart India Hackathon](https://img.shields.io/badge/Smart%20India%20Hackathon-2025-FF6B00)](https://www.sih.gov.in)
+[![License: Apache 2.0](https://img.shields.io/github/license/Divyakush2006/AI-ROCKFALL-DETECTION-AND-PREVENTION?color=blue)](LICENSE)
+
+[Project write-up](https://www.divyakush.com/projects/rockfall-prediction) · [Report a bug](https://github.com/Divyakush2006/AI-ROCKFALL-DETECTION-AND-PREVENTION/issues/new/choose) · [Request a feature](https://github.com/Divyakush2006/AI-ROCKFALL-DETECTION-AND-PREVENTION/issues/new/choose)
 
 </div>
 
@@ -35,7 +38,10 @@ model, and a one-touch site-wide evacuation alarm.
 - [Project structure](#project-structure)
 - [Design system](#design-system)
 - [Roadmap](#roadmap)
-- [Author](#author)
+- [Contributing](#contributing)
+- [Security](#security)
+- [License](#license)
+- [Team](#team)
 
 ---
 
@@ -422,14 +428,29 @@ Ordered by what would most increase the system's real-world value:
 
 ---
 
-## Author
+## Contributing
 
-**Divyakush Punjabi**
+Contributions are welcome. Please read the [contributing guide](https://github.com/Divyakush2006/.github/blob/main/CONTRIBUTING.md) before opening a pull request.
+
+## Security
+
+Please report vulnerabilities privately as described in the [security policy](https://github.com/Divyakush2006/.github/blob/main/SECURITY.md). Do not open a public issue.
+
+## License
+
+Released under the [Apache License 2.0](LICENSE).
+
+---
+
+## Team
+
+**Divyakush Punjabi** (lead): dashboard, alarm subsystem, model card and documentation
 B.Tech Computer Engineering, VIT Vellore · Major in AI, IIT Ropar
-
 [Portfolio](https://www.divyakush.com) · [GitHub](https://github.com/Divyakush2006) · [LinkedIn](https://linkedin.com/in/divyakush-punjabi)
 
-Built for **Smart India Hackathon 2025** — shortlisted.
+With [SciAditya03](https://github.com/SciAditya03) (training data and ML pipeline on the `ML-Model` branch) and [abhi-s99](https://github.com/abhi-s99).
+
+Built for **Smart India Hackathon 2025**, where it was shortlisted.
 
 <div align="center">
 <sub>If this is useful to you, a ⭐ is appreciated.</sub>
