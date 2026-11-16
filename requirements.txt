@@ -3,10 +3,10 @@
 # Web Framework
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
-python-multipart==0.0.6
+python-multipart==0.0.31
 
 # WebSocket Support
-python-socketio==5.10.0
+python-socketio==5.16.4
 websockets==12.0
 
 # CORS Support
@@ -39,12 +39,12 @@ prometheus-client==0.19.0
 python-telegram-bot==20.7
 
 # Environment & Config
-python-dotenv==1.0.0
+python-dotenv==1.2.4
 pydantic==2.5.2
 pydantic-settings==2.1.0
 
 # Authentication & Security
-python-jose[cryptography]==3.3.0
+python-jose[cryptography]==3.4.0
 passlib[bcrypt]==1.7.4
 python-oauth2==1.1.1
 
@@ -66,9 +66,9 @@ celery==5.3.4
 flower==2.0.1
 
 # API Documentation
-python-multipart==0.0.6
+python-multipart==0.0.31
 
-Flask==2.2.3
+Flask==2.2.5
 numpy==1.24.3
-scikit-learn==1.2.2
+scikit-learn==1.5.2
 flask-cors==3.0.10
